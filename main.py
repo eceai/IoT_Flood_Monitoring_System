@@ -135,7 +135,7 @@ def alert_system(level_cm):
                 remaining = DAM_DEPTH_CM - level_cm
                 eta_sec = remaining / rate
                 eta_min = eta_sec / 60
-                message += f"\n⏱ Estimated time to overflow: {eta_min:.1f} min"
+                message += f"\n⏱ Estimated time to overflow: {eta_min:.1f} seconds"
 
         print(f"ALERT! Water Level: {level_cm:.2f} cm ({fill_percent:.1f}%)")
         telegram_send(message)  # Send every reading during ALERT
