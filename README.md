@@ -5,7 +5,8 @@ Real time water level monitoring system using Raspberry Pi Pico for flood_prone 
 - **Sakshath S Shetty** NNM23EC149
 - **Samarth D Prabhu** NNM23EC151
 - **Shamith Hegde** NNM23EC159
-===
+
+ ===
 
 ### I. Problem Statement
 Develop an IoT Flood Monitoring System with Raspberry Pi Pico for real-time water level monitoring and timely alerts
@@ -23,7 +24,7 @@ Our solution employs the MicroPython environment on the Raspberry Pi Pico W to c
 ```mermaid
 %%{init: {'theme': 'neutral' } }%%
 graph TD
-    A([Start]) --> B["Init Pins: Buzzer=OFF, Safe LED=ON"]
+    A([Start]) --> B["Init Pins: Buzzer=OFF, Alert LED=OFF"]
     B --> C["connect_wifi()"]
     C --> D["get_chat_id()"]
     D --> E("Start: while True loop")
@@ -40,8 +41,8 @@ graph TD
     J --> K{"Is level < 10cm (ALERT)?"}
     
     %% === ALERT STATE BRANCH ===
-    %% Logic: Water is LOW (Danger/Alert) -> Safe LED OFF
-    K -- Yes (DANGER) --> L["Set Pins: Safe LED=0 (OFF), Buzzer=0 (ON)"]
+    %% Logic: Water is LOW (Danger) -> Alert LED ON
+    K -- Yes (DANGER) --> L["Set Pins: Alert LED=1 (ON), Buzzer=0 (ON)"]
     L --> M{"Have 2 readings & water rising?"}
     M -- Yes --> N["Calculate Overflow ETA & add to message"]
     M -- No --> O["Prepare basic ALERT message"]
@@ -50,8 +51,8 @@ graph TD
     P --> Q["last_state = ALERT"]
     
     %% === SAFE STATE BRANCH ===
-    %% Logic: Water is HIGH (Safe) -> Safe LED ON
-    K -- No (SAFE) --> R["Set Pins: Safe LED=1 (ON), Buzzer=1 (OFF)"]
+    %% Logic: Water is HIGH (Safe) -> Alert LED OFF
+    K -- No (SAFE) --> R["Set Pins: Alert LED=0 (OFF), Buzzer=1 (OFF)"]
     R --> S{"If last_state != SAFE?"}
     S -- Yes (State Changed) --> T["telegram_send(Safe Message)"]
     T --> U["last_state = SAFE"]
