@@ -35,34 +35,36 @@ graph TD
     G -- No --> H["Print: Sensor error..."]
     H --> X["Time.sleep(7)"]
 
-    %% Path if Sensor Works (Start of alert_system)
-    G -- Yes --> I["Update last_readings (Timestamp & Level)"]
+    %% Path if Sensor Works
+    G -- Yes --> I["Store Reading (Timestamp & Level)"]
     I --> J["Calculate fill_percent"]
     J --> K{"Is level < 10cm (ALERT)?"}
     
-    %% === ALERT STATE BRANCH ===
-    %% Logic: Water is LOW (Danger) -> Alert LED ON
-    K -- Yes (DANGER) --> L["Set Pins: Alert LED=1 (ON), Buzzer=0 (ON)"]
-    L --> M{"Have 2 readings & water rising?"}
-    M -- Yes --> N["Calculate Overflow ETA & add to message"]
-    M -- No --> O["Prepare basic ALERT message"]
-    N --> O
-    O --> P["telegram_send(message) (Sends every loop)"]
-    P --> Q["last_state = ALERT"]
+    %% === ALERT STATE BRANCH (DANGER) ===
+    K -- Yes --> L["Set Pins: Alert LED=1 (ON), Buzzer=0 (ON)"]
+    L --> M{"Have 2 readings to compare?"}
+    
+    %% New Overflow Logic Feature
+    M -- Yes --> N["Calculate Rise Rate (cm/sec)"]
+    N --> O["Calculate Estimated Time to Overflow"]
+    O --> P["Add Estimation to Telegram Message"]
+    M -- No --> Q["Prepare Basic Alert Message"]
+    P --> Q
+    
+    Q --> R["telegram_send(message)"]
+    R --> S["last_state = ALERT"]
     
     %% === SAFE STATE BRANCH ===
-    %% Logic: Water is HIGH (Safe) -> Alert LED OFF
-    K -- No (SAFE) --> R["Set Pins: Alert LED=0 (OFF), Buzzer=1 (OFF)"]
-    R --> S{"If last_state != SAFE?"}
-    S -- Yes (State Changed) --> T["telegram_send(Safe Message)"]
-    T --> U["last_state = SAFE"]
-    S -- No (Still Safe) --> U
+    K -- No --> T["Set Pins: Alert LED=0 (OFF), Buzzer=1 (OFF)"]
+    T --> U{"If last_state != SAFE?"}
+    U -- Yes --> V["telegram_send(Safe Message)"]
+    V --> W["last_state = SAFE"]
+    U -- No --> W
 
     %% Join branches to send data to cloud
-    Q --> V["send_data(dist) to ThingSpeak"]
-    U --> V
+    S --> Z["send_data(dist) to ThingSpeak"]
+    W --> Z
     
     %% Loop back
-    V --> X
+    Z --> X
     X --> E
-
