@@ -23,47 +23,44 @@ Our solution employs the MicroPython environment on the Raspberry Pi Pico W to c
 ```mermaid
 %%{init: {'theme': 'neutral' } }%%
 graph TD
-    A([Start]) --> B["connect_wifi()"]
-    B --> C["get_chat_id()"]
-    C --> D("Start: while True loop")
-    D --> E["dist = get_distance()"]
-    E --> F{"Is dist valid?"}
+    A([Start]) --> B["Init Pins: Buzzer=OFF, Safe LED=ON"]
+    B --> C["connect_wifi()"]
+    C --> D["get_chat_id()"]
+    D --> E("Start: while True loop")
+    E --> F["dist = get_distance()"]
+    F --> G{"Is dist valid?"}
     
     %% Path if Sensor Fails
-    F -- No --> G["Print: Sensor error..."]
-    G --> J["Time.sleep(7)"]
+    G -- No --> H["Print: Sensor error..."]
+    H --> X["Time.sleep(7)"]
 
-    %% Path if Sensor Works (Alert System Logic)
-    F -- Yes --> K["Calculate level_cm & fill_percent"]
-    K --> L{"Is level_cm < 20cm (CRITICAL)?"}
+    %% Path if Sensor Works (Start of alert_system)
+    G -- Yes --> I["Update last_readings (Timestamp & Level)"]
+    I --> J["Calculate fill_percent"]
+    J --> K{"Is level < 10cm (ALERT)?"}
     
-    %% Critical Branch
-    L -- Yes --> M["Turn ON Red LED & Buzzer"]
-    M --> O{"If last_state != CRITICAL?"}
-    O -- Yes --> P["telegram_send(CRITICAL)"]
-    P --> Q["last_state = CRITICAL"]
-    O -- No --> Q
+    %% === ALERT STATE BRANCH ===
+    %% Logic: Water is LOW (Danger/Alert) -> Safe LED OFF
+    K -- Yes (DANGER) --> L["Set Pins: Safe LED=0 (OFF), Buzzer=0 (ON)"]
+    L --> M{"Have 2 readings & water rising?"}
+    M -- Yes --> N["Calculate Overflow ETA & add to message"]
+    M -- No --> O["Prepare basic ALERT message"]
+    N --> O
+    O --> P["telegram_send(message) (Sends every loop)"]
+    P --> Q["last_state = ALERT"]
     
-    %% Warning Branch
-    L -- No --> S{"Is level_cm < 40cm (WARNING)?"}
-    S -- Yes --> T["Turn ON Yellow LED & OFF Buzzer"]
-    T --> V{"If last_state != WARNING?"}
-    V -- Yes --> W["telegram_send(WARNING)"]
-    W --> X["last_state = WARNING"]
-    V -- No --> X
+    %% === SAFE STATE BRANCH ===
+    %% Logic: Water is HIGH (Safe) -> Safe LED ON
+    K -- No (SAFE) --> R["Set Pins: Safe LED=1 (ON), Buzzer=1 (OFF)"]
+    R --> S{"If last_state != SAFE?"}
+    S -- Yes (State Changed) --> T["telegram_send(Safe Message)"]
+    T --> U["last_state = SAFE"]
+    S -- No (Still Safe) --> U
 
-    %% Safe Branch
-    S -- No --> Y["Turn OFF Yellow LED & Buzzer"]
-    Y --> Z{"If last_state != SAFE?"}
-    Z -- Yes --> B1["telegram_send(SAFE)"]
-    B1 --> C1["last_state = SAFE"]
-    Z -- No --> C1
-    
-    %% All branches go to Send Data
-    Q --> I["send_data(dist) to ThingSpeak"]
-    X --> I
-    C1 --> I
+    %% Join branches to send data to cloud
+    Q --> V["send_data(dist) to ThingSpeak"]
+    U --> V
     
     %% Loop back
-    I --> J
-    J --> D
+    V --> X
+    X --> E
