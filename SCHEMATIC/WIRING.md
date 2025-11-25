@@ -13,9 +13,9 @@ This document details the pin connections between the Raspberry Pi Pico W and th
 ## 2. Output Components
 | Component | Component Leg | Pico Pin | Note |
 | :--- | :--- | :--- | :--- |
-| **Safe LED** | Anode (+) | **GP8** | Connected via Resistor |
-| **Safe LED** | Cathode (-) | **GND** | Common Ground |
+| **Alert LED** | Anode (+) | **GP8** | Connected via Resistor |
+| **Alert LED** | Cathode (-) | **GND** | Common Ground |
 | **Buzzer** | Positive (+) | **GP13** | Signal |
 | **Buzzer** | Negative (-) | **GND** | Common Ground |
 
-*Note: The breadboard power rails are connected to VBUS (Red Rail) and GND (Blue Rail).*
+*Note: The breadboard power rails are connected to VCC (Red Rail) and GND (Black Rail).*
